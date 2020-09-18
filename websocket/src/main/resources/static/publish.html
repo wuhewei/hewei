@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>webSocket - publish</title>
+</head>
+<body>
+<div class="publish-wrapper">
+    <label for="message">
+        <textarea id="message" rows="10" cols="30" placeholder="发布消息内容"></textarea>
+    </label>
+    <button id="send">发送</button>
+    <label id="sendStatus"></label>
+</div>
+<script src="js/sockjs.min.js"></script>
+<script src="js/stomp.min.js"></script>
+<script>
+    const wsHost = 'http://localhost:8080/websocket/portfolio';
+    const wsTopic = '/topic/info';
+    let stompClient;
+
+    let message = document.getElementById('message');
+    let sendStatus = document.getElementById('sendStatus');
+
+    (function initSockJS() {
+        (function reconnect() {
+            let sockJs = new SockJS(wsHost);
+            stompClient = Stomp.over(sockJs);
+            stompClient.connect({}, (frame) => {
+                // 读取所有消息
+                // 读取未读消息数量
+
+                sendStatus.innerText = '连接成功';
+                console.log('websocket连接成功：' + frame);
+            }, () => {
+                sendStatus.innerText = '已断开连接，正在重连...';
+                setTimeout(() => {
+                    reconnect();
+                }, 5000);
+            });
+        })();
+    })();
+
+    document.getElementById('send').onclick = function () {
+        stompClient.send(wsTopic, {}, message.value);
+        sendStatus.innerText = '发送成功！';
+        message.value = '';
+    };
+</script>
+</body>
+</html>

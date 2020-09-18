@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>webSocket - subscribe</title>
+</head>
+<body>
+<div class="publish-wrapper">
+    <label for="message">
+        <textarea id="message" rows="30" cols="100" readonly placeholder="订阅消息列表"></textarea>
+    </label>
+</div>
+<script src="js/sockjs.min.js"></script>
+<script src="js/stomp.min.js"></script>
+<script>
+    const wsHost = 'http://localhost:8080/websocket/portfolio';
+    const wsTopic = '/topic/info';
+    const wsUser = '/topic/213';
+    let stompClient;
+
+    (function initSockJS() {
+        (function reconnect() {
+            let sockJs = new SockJS(wsHost);
+            stompClient = Stomp.over(sockJs);
+            stompClient.connect({}, (frame) => {
+                console.log('websocket连接成功：' + frame);
+                stompClient.subscribe(wsTopic, (response) => {
+                    console.log('接收到一对多消息：' + response);
+                    let message = document.getElementById('message');
+                    message.value = message.value + '\r\n--------------------\r\n' + response.body;
+                });
+                stompClient.subscribe(wsUser, (response) => {
+                    console.log('接收到一对一消息：' + response);
+                    let message = document.getElementById('message');
+                    message.value = message.value + '\r\n--------------------\r\n' + response.body;
+                });
+            }, () => {
+                setTimeout(() => {
+                    reconnect();
+                }, 5000);
+            });
+        })();
+    })();
+
+    document.getElementById('message').onchange = function () {
+        // 发送已读取所有请求
+    };
+</script>
+</body>
+</html>
